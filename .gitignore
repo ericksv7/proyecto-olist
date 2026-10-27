@@ -1,0 +1,19 @@
+# Entorno virtual
+.venv/
+
+# Cache de Python
+__pycache__/
+*.pyc
+
+# Datos descargados (se bajan desde Kaggle, ver README)
+data/raw/
+
+# Base de datos generada por el script de importación
+*.db
+*.sqlite
+
+# Secretos y variables de entorno
+.env
+
+# Editor
+.vscode/
