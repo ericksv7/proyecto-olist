@@ -63,6 +63,19 @@ c4.metric(
     delta_color="off",
     help="Todos los pedidos del filtro, sin importar su estado.",
 )
+
+# ---------- Alertas gerenciales ----------
+alertas = []
+if ticket is not None and ticket < M["ticket"]:
+    alertas.append(f"el ticket promedio ({ticket:,.2f}) está bajo la meta de {M['ticket']:.0f} BRL")
+if ciclo is not None and ciclo > M["ciclo"]:
+    alertas.append(f"el ciclo de entrega ({ciclo:.2f} días) supera la meta de {M['ciclo']:.0f} días")
+if a_tiempo is not None and a_tiempo < M["a_tiempo"]:
+    alertas.append(f"las entregas a tiempo ({a_tiempo:.1f} %) están bajo la meta de {M['a_tiempo']:.0f} %")
+if alertas:
+    st.warning("**Atención gerencial:** " + "; ".join(alertas) + ".")
+else:
+    st.success("Todos los KPIs del período cumplen sus metas.")
 st.caption("Las metas son objetivos propuestos para el proyecto, no referencias oficiales.")
 
 st.divider()
@@ -71,6 +84,8 @@ st.divider()
 mensual = kpis.ingresos_mensuales(desde, hasta, origen)
 entregas = kpis.entregas_mensuales(desde, hasta, origen)
 cats = kpis.top_categorias(desde, hasta, origen)
+uf = kpis.ventas_por_uf(desde, hasta, origen)
+estados_df = kpis.pedidos_por_estado(desde, hasta, origen)
 
 g1, g2 = st.columns(2)
 with g1:
@@ -131,6 +146,29 @@ with g4:
         fig.update_yaxes(autorange="reversed")
         st.plotly_chart(fig)
     st.caption("Top 5 de categorías por unidades, con su participación sobre el total vendido.")
+
+g5, g6 = st.columns(2)
+with g5:
+    st.subheader("¿Dónde están los clientes?")
+    if uf.empty:
+        st.info("Sin ventas en el período.")
+    else:
+        fig = px.bar(
+            uf, x="uf", y="ingresos",
+            labels={"uf": "Estado (UF)", "ingresos": "Ingresos (BRL)"},
+            hover_data={"pedidos": True},
+        )
+        st.plotly_chart(fig)
+    st.caption("Top 10 de estados por ingresos. Orienta dónde reforzar logística o marketing.")
+
+with g6:
+    st.subheader("¿Hay pedidos sin completar?")
+    fig = px.bar(
+        estados_df, x="estado", y="pedidos", text_auto=True,
+        labels={"estado": "Estado del pedido", "pedidos": "Pedidos"},
+    )
+    st.plotly_chart(fig)
+    st.caption("Pedidos por estado. Muchos pedidos detenidos antes de 'Entregado' indican cuellos de botella.")
 
 st.divider()
 

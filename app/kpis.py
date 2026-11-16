@@ -122,3 +122,32 @@ def detalle(desde, hasta, origen, estados=None):
             ORDER BY p.fecha_compra DESC""",
         params,
     )
+
+
+def ventas_por_uf(desde, hasta, origen):
+    w, params = _filtro(desde, hasta, origen)
+    return db.consultar(
+        f"""SELECT c.estado_uf AS uf,
+                   COUNT(DISTINCT p.id_pedido) AS pedidos,
+                   ROUND(SUM(i.precio), 2) AS ingresos
+            FROM pedidos p
+            JOIN items_pedido i ON i.id_pedido = p.id_pedido
+            JOIN clientes c ON c.id_cliente = p.id_cliente
+            WHERE {w} AND p.estado NOT IN {EXCLUIDOS}
+            GROUP BY c.estado_uf
+            ORDER BY ingresos DESC
+            LIMIT 10""",
+        params,
+    )
+
+
+def pedidos_por_estado(desde, hasta, origen):
+    w, params = _filtro(desde, hasta, origen)
+    return db.consultar(
+        f"""SELECT e.nombre AS estado, e.orden, COUNT(*) AS pedidos
+            FROM pedidos p JOIN estados_pedido e ON e.codigo = p.estado
+            WHERE {w}
+            GROUP BY e.codigo
+            ORDER BY e.orden""",
+        params,
+    )
